@@ -1,12 +1,13 @@
 package lab.scheduler.config;
 
-import lab.scheduler.enums.JobHAOption;
+import lab.scheduler.enums.JobClusterOption;
 import lab.scheduler.enums.TriggerType;
-import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.CronExpression;
 import org.quartz.Job;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -21,15 +22,23 @@ public class ScheduleJobInfo {
     private Map<String, Object> jobParams;
     private TriggerType triggerType;
     private Class<? extends Job> jobClass;
-    private JobHAOption jobHAOption = JobHAOption.FOLLOW_SCHEDULER_DEFAULT;
+    private JobClusterOption jobClusterOption = JobClusterOption.FOLLOW_SCHEDULER_DEFAULT;
 
 
     public static boolean isValidCronExpression(String cronExpression) {
-        return false;
+        return CronExpression.isValidExpression(cronExpression);
     }
 
     public static boolean isValidSimpleExpression(String simpleExpression) {
+
         return false;
+    }
+
+    public void setJobName(String jobName) {
+        if (jobName != null && jobName.isEmpty()) {
+            jobName = null;
+        }
+        this.jobName = jobName;
     }
 
     public void setCronExpression(String cronExpression) {
@@ -46,6 +55,39 @@ public class ScheduleJobInfo {
         this.simpleExpression = simpleExpression;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void addJobParam(String key, Object value) {
+        if (jobParams == null) {
+            jobParams = new HashMap<>();
+        }
+        jobParams.put(key, value);
+    }
+
+    public void setTriggerGroupName(String triggerGroupName) {
+        if (triggerGroupName == null) {
+            throw new IllegalArgumentException("Trigger group name cannot be null");
+        }
+        triggerGroupName = triggerGroupName.trim();
+        if (triggerGroupName.isEmpty()) {
+            throw new IllegalArgumentException("Trigger group name cannot be empty");
+        }
+        this.triggerGroupName = triggerGroupName;
+    }
+
+    public void setJobGroupName(String jobGroupName) {
+        if (jobGroupName == null) {
+            throw new IllegalArgumentException("Job group name cannot be null");
+        }
+        jobGroupName = jobGroupName.trim();
+        if (jobGroupName.isEmpty()) {
+            throw new IllegalArgumentException("Job group name cannot be empty");
+        }
+        this.jobGroupName = jobGroupName;
+    }
+
     public void setTriggerType(TriggerType triggerType) {
         this.triggerType = triggerType;
     }
@@ -59,15 +101,28 @@ public class ScheduleJobInfo {
         }
     }
 
-    public void setJobHAOption(JobHAOption jobHAOption) {
-        this.jobHAOption = jobHAOption;
+    public void setJobClass(String jobClass) throws ClassNotFoundException {
+        Class clazz = Class.forName(jobClass);
+        if (!Job.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("'" + jobClass + "' is not type of Job class");
+        }
+        this.jobClass = clazz;
     }
 
-    public void setJobHAOption(boolean jobHAOption) {
+    public void setJobClass(Class<? extends Job> jobClass) {
+        this.jobClass = jobClass;
+    }
+
+    public void setJobClusterOption(JobClusterOption jobClusterOption) {
+        this.jobClusterOption = jobClusterOption;
+    }
+
+    public void setJobClusterOption(boolean jobHAOption) {
         if (jobHAOption) {
-            this.jobHAOption = JobHAOption.FOLLOW_SCHEDULER_DEFAULT;
+            this.jobClusterOption = JobClusterOption.FOLLOW_SCHEDULER_DEFAULT;
         } else {
-            this.jobHAOption = JobHAOption.INACTIVE;
+            this.jobClusterOption = JobClusterOption.INACTIVE;
         }
     }
+
 }

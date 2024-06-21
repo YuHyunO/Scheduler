@@ -1,6 +1,6 @@
 package lab.scheduler.enums;
 
-public enum JobHAOption {
+public enum JobClusterOption {
     FOLLOW_SCHEDULER_DEFAULT,
     INACTIVE
 }
