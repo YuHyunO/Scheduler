@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+group = 'oyh.lab'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+}
+
+test {
+    useJUnitPlatform()
+}
