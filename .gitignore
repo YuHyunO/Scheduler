@@ -1,5 +1,8 @@
+.gitattributes
+gradlew**
 .gradle
 build/
+gradle/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -15,6 +18,11 @@ build/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+.idea
+src/test
+
+
+src/main/generated
 
 ### Eclipse ###
 .apt_generated
