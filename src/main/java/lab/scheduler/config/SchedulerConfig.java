@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data
-public class SchedulerConfiguration {
+public class SchedulerConfig {
     private boolean isClustered;
     private JobClusteringConfig clusteringConfig;
     private boolean autoAdjustThreadPoolSize = true;
