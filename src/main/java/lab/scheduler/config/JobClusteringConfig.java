@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -21,17 +22,11 @@ public class JobClusteringConfig {
 
     private JobClusterType clusterType = JobClusterType.TCP_COMMUNICATION;
     private JobClusterStrategy clusterStrategy = JobClusterStrategy.FREE_HEAP_MEMORY;
-
-    //-------For JobClusterType.TCP_COMMUNICATION and JobClusterType.HTTP_COMMUNICATION
     private int haConnectTimeoutMs = 2000;
     private int haReadTimeoutMs = 2000;
     private int haServerOpenPort = 7070;
     private List<InetAddress> haServerAddresses;
-
-    //-------For JobClusterType.DB_JOBSTORE and the available job store class is only JobStoreTX
     private Properties quartzClusteringProperties;
-
-    //-------For JobClusterType.FILE_JOBSTORE
     private Path jobStorePath;
 
 
@@ -105,9 +100,22 @@ public class JobClusteringConfig {
 
     public void setQuartzClusteringPropertiesFileLocation(String quartzClusteringPropertiesFileLocation) throws IOException {
         Properties props = new Properties();
+        Properties jobStoreProps = new Properties();
         props.load(new FileReader(quartzClusteringPropertiesFileLocation));
+        for (String key : props.stringPropertyNames()) {
+            if (key.startsWith("org.quartz.jobStore.") || key.startsWith("org.quartz.dataSource.")) {
+                jobStoreProps.put(key, props.get(key));
+            }
+        }
         this.quartzClusteringProperties = props;
     }
 
+    public void setJobStorePath(Path jobStorePath) {
+        this.jobStorePath = jobStorePath;
+    }
+
+    public void setJobStorePath(String jobStorePath) {
+        Paths.get(jobStorePath);
+    }
 
 }

@@ -16,6 +16,7 @@ public class ScheduleJobInfo {
     private String jobName;
     private String cronExpression;
     private String simpleExpression;
+    private String calendarExpression;
     private String description;
     private String triggerGroupName = "Trigger-group";
     private String jobGroupName = "Job-group";
@@ -34,6 +35,11 @@ public class ScheduleJobInfo {
         return false;
     }
 
+    public static boolean isValidCalenderExpression(String calendarExpression) {
+
+        return false;
+    }
+
     public void setJobName(String jobName) {
         if (jobName != null && jobName.isEmpty()) {
             jobName = null;
@@ -46,6 +52,7 @@ public class ScheduleJobInfo {
             throw new IllegalArgumentException("Invalid cron expression: " + cronExpression);
         }
         this.cronExpression = cronExpression;
+        triggerType = TriggerType.CRON_TRIGGER;
     }
 
     public void setSimpleExpression(String simpleExpression) {
@@ -53,10 +60,23 @@ public class ScheduleJobInfo {
             throw new IllegalArgumentException("Invalid simple expression: " + simpleExpression);
         }
         this.simpleExpression = simpleExpression;
+        triggerType = TriggerType.SIMPLE_TRIGGER;
+    }
+
+    public void setCalenderExpression(String calendarExpression) {
+        if (!isValidCalenderExpression(calendarExpression)) {
+            throw new IllegalArgumentException("Invalid calendar expression: " + calendarExpression);
+        }
+        this.calendarExpression = calendarExpression;
+        triggerType = TriggerType.CALENDAR_INTERVAL_TRIGGER;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setJobParams(Map<String, Object> jobParams) {
+        this.jobParams = jobParams;
     }
 
     public void addJobParam(String key, Object value) {
@@ -97,6 +117,7 @@ public class ScheduleJobInfo {
         switch (triggerType) {
             case "CRON_TRIGGER" : case "CRON" : this.triggerType = TriggerType.CRON_TRIGGER; break;
             case "SIMPLE_TRIGGER" : case "SIMPLE" : this.triggerType = TriggerType.SIMPLE_TRIGGER; break;
+            case "CALENDAR_INTERVAL_TRIGGER" : case "CALENDAR_TRIGGER" : case "CALENDAR" : this.triggerType = TriggerType.CALENDAR_INTERVAL_TRIGGER; break;
             default: throw new IllegalArgumentException("There is no supported trigger type: " + triggerType);
         }
     }
