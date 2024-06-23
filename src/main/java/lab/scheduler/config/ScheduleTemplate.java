@@ -1,10 +1,11 @@
-package lab.scheduler.core;
+package lab.scheduler.config;
 
 import lab.scheduler.enums.JobClusterOption;
 import lab.scheduler.enums.TriggerType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
+import org.quartz.utils.Key;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -38,6 +39,9 @@ public class ScheduleTemplate {
     }
 
     public Trigger getTrigger(TriggerType triggerType) {
+        if (jobID == null || jobID.isEmpty()) {
+            jobID = Key.createUniqueName(jobGroupName);
+        }
         switch (triggerType) {
             case CRON_TRIGGER -> {
                 return TriggerBuilder.newTrigger()
@@ -93,10 +97,14 @@ public class ScheduleTemplate {
                         .build();
             }
         }
+
         return null;
     }
 
     public JobDetail getJob() {
+        if (jobID == null || jobID.isEmpty()) {
+            jobID = Key.createUniqueName(jobGroupName);
+        }
         JobBuilder builder = JobBuilder.newJob(jobClass)
                 .withIdentity(jobID, jobGroupName);
         JobDataMap dataMap = new JobDataMap();
