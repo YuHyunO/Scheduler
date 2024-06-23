@@ -12,7 +12,31 @@ public class SchedulerManager {
     private static final Map<String, Scheduler> SCHEDULER_REGISTRY = new HashMap<>();
     private static final Map<String, SchedulerConfig> SCHEDULER_CONFIG_REGISTRY = new HashMap<>();
     private static final Map<String, TriggerKey> TRIGGER_KEY_REGISTRY = new HashMap<>();
+    private static Class<? extends Job> defaultedJobClass;
 
+    public static void setDefaultJobClass(Class<? extends Job> jobClass) {
+        if (!Job.class.isAssignableFrom(jobClass)) {
+            throw new IllegalArgumentException("Job class must be an instance of " + Job.class.getName());
+        }
+        defaultedJobClass = jobClass;
+    }
+
+    public static void setDefaultJobClass(String jobClassName) {
+        Class jobClass = null;
+        try {
+            jobClass = Class.forName(jobClassName);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException("Could not find class: " + jobClass + ", ClassNotFoundException");
+        }
+        if (!Job.class.isAssignableFrom(jobClass)) {
+            throw new IllegalArgumentException("Job class must be an instance of " + Job.class.getName());
+        }
+        defaultedJobClass = jobClass;
+    }
+
+    public static Class<? extends Job> getDefaultJobClass() {
+        return defaultedJobClass;
+    }
 
     public static String registerScheduler(SchedulerConfig config) throws SchedulerException {
         return registerScheduler(null, config);

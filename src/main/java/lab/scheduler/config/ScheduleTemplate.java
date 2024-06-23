@@ -1,5 +1,6 @@
 package lab.scheduler.config;
 
+import lab.scheduler.core.SchedulerManager;
 import lab.scheduler.enums.JobClusterOption;
 import lab.scheduler.enums.TriggerType;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.util.Map;
 @Slf4j
 @Getter
 public class ScheduleTemplate {
-    private String jobID;
+    private String jobName;
     private int priority = -1;
     private String cronExpression;
     private Date startTime;
@@ -34,28 +35,31 @@ public class ScheduleTemplate {
     private Class<? extends Job> jobClass;
     private JobClusterOption jobClusterOption = JobClusterOption.FOLLOW_SCHEDULER_DEFAULT;
 
-    public Trigger getTrigger() {
-        return getTrigger(this.triggerType);
+    public Trigger getTrigger() throws IllegalStateException {
+        if (triggerType == null) {
+            throw new IllegalStateException("Trigger type not set");
+        }
+        return getTrigger(triggerType);
     }
 
     public Trigger getTrigger(TriggerType triggerType) {
-        if (jobID == null || jobID.isEmpty()) {
-            jobID = Key.createUniqueName(jobGroupName);
+        if (jobName == null || jobName.isEmpty()) {
+            jobName = Key.createUniqueName(jobGroupName);
         }
         switch (triggerType) {
             case CRON_TRIGGER -> {
                 return TriggerBuilder.newTrigger()
-                        .withIdentity("trg-" + jobID, triggerGroupName)
+                        .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
                         .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
-                        .forJob(jobID, jobGroupName)
+                        .forJob(jobName, jobGroupName)
                         .build();
             }
             case SIMPLE_TRIGGER -> {
                 TriggerBuilder trgBuilder = TriggerBuilder.newTrigger()
-                        .withIdentity("trg-" + jobID, triggerGroupName)
+                        .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
-                        .forJob(jobID, jobGroupName);
+                        .forJob(jobName, jobGroupName);
                 SimpleScheduleBuilder simSchd = SimpleScheduleBuilder.simpleSchedule();
                 if (repeatCount == -1) {
                     simSchd.repeatForever();
@@ -74,18 +78,18 @@ public class ScheduleTemplate {
             }
             case CALENDAR_INTERVAL_TRIGGER -> {
                 return TriggerBuilder.newTrigger()
-                        .withIdentity("trg-" + jobID, triggerGroupName)
+                        .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
                         .withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule()
                                 .withInterval(repeatInterval, intervalUnit))
                         .startAt(startTime)
                         .endAt(endTime)
-                        .forJob(jobID, jobGroupName)
+                        .forJob(jobName, jobGroupName)
                         .build();
             }
             case DAILY_TIME_INTERVAL_TRIGGER -> {
                 return TriggerBuilder.newTrigger()
-                        .withIdentity("trg-" + jobID, triggerGroupName)
+                        .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
                         .withSchedule(DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule()
                                 .withInterval(repeatInterval, intervalUnit)
@@ -93,7 +97,7 @@ public class ScheduleTemplate {
                                 .endingDailyAt(endTimeOfDay))
                         .startAt(startTime)
                         .endAt(endTime)
-                        .forJob(jobID, jobGroupName)
+                        .forJob(jobName, jobGroupName)
                         .build();
             }
         }
@@ -102,11 +106,18 @@ public class ScheduleTemplate {
     }
 
     public JobDetail getJob() {
-        if (jobID == null || jobID.isEmpty()) {
-            jobID = Key.createUniqueName(jobGroupName);
+        if (jobName == null || jobName.isEmpty()) {
+            jobName = Key.createUniqueName(jobGroupName);
+        }
+        if (jobClass == null) {
+            Class<? extends Job> clazz = SchedulerManager.getDefaultJobClass();
+            if (clazz == null) {
+                throw new IllegalStateException("Job class not set. You must specify at ScheduleTemplate or a default job class at ScheduleManager.");
+            }
+            jobClass = clazz;
         }
         JobBuilder builder = JobBuilder.newJob(jobClass)
-                .withIdentity(jobID, jobGroupName);
+                .withIdentity(jobName, jobGroupName);
         JobDataMap dataMap = new JobDataMap();
         dataMap.put("clusterOption", jobClusterOption);
         if (jobParams != null) {
@@ -121,11 +132,11 @@ public class ScheduleTemplate {
         return builder.build();
     }
 
-    public void setJobID(String jobID) {
-        if (jobID != null && jobID.isEmpty()) {
-            jobID = null;
+    public void setjobName(String jobName) {
+        if (jobName != null && jobName.isEmpty()) {
+            jobName = null;
         }
-        this.jobID = jobID;
+        this.jobName = jobName;
     }
 
     public void setPriority(int priority) {
@@ -291,8 +302,13 @@ public class ScheduleTemplate {
         }
     }
 
-    public void setJobClass(String jobClass) throws ClassNotFoundException {
-        Class clazz = Class.forName(jobClass);
+    public void setJobClass(String jobClass) {
+        Class clazz = null;
+        try {
+            clazz = Class.forName(jobClass);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException("Could not find class: " + jobClass + ", ClassNotFoundException");
+        }
         if (!Job.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("'" + jobClass + "' is not type of Job class");
         }

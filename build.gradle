@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'oyh.lab'
-version = '1.0-SNAPSHOT'
+version = '1.0.0'
 
 repositories {
     mavenCentral()
@@ -14,10 +14,13 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     implementation 'org.quartz-scheduler:quartz:2.3.2'
-
-
 }
 
-test {
-    useJUnitPlatform()
+sourceSets {
+    main {
+        java {
+            exclude 'lab/scheduler/tutorial/**'
+        }
+
+    }
 }

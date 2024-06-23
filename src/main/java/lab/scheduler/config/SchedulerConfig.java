@@ -31,17 +31,17 @@ public class SchedulerConfig {
 
     public void setThreadCount(int threadCount) {
         this.threadCount = threadCount;
-        properties.put("org.quartz.threadPool.threadCount", threadCount);
+        properties.setProperty("org.quartz.threadPool.threadCount", String.valueOf(threadCount));
     }
 
     public void setThreadPoolName(String threadPoolName) {
         this.threadPoolName = threadPoolName;
-        properties.put("org.quartz.scheduler.threadName", threadPoolName);
+        properties.setProperty("org.quartz.scheduler.threadName", threadPoolName);
     }
 
     public void setThreadPoolClass(String threadPoolClass) {
         this.threadPoolClass = threadPoolClass;
-        properties.put("org.quartz.threadPool.class", threadPoolClass);
+        properties.setProperty("org.quartz.threadPool.class", threadPoolClass);
     }
 
     public void setProperties(Properties properties) {
