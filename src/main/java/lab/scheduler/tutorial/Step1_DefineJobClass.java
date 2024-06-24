@@ -3,6 +3,9 @@ package lab.scheduler.tutorial;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 
+/*
+* (1) Implement a class which implements Job interface
+* */
 @Slf4j
 public class Step1_DefineJobClass implements Job {
 
