@@ -17,6 +17,7 @@ public class Step2_StartCronScheduler {
         SchedulerConfig config = new SchedulerConfig();
         config.setAutoAdjustThreadCount(true); // <- The property 'autoAdjustThreadCount=true' enables that thread pool size is automatically sized with schedule Job count. Default value is 'true'.
         config.setThreadCount(7); // <- In this case, the effect of using 'setThreadCount(int count)' is ignored because 'autoAdjustThreadCount' is true as above.
+        config.setMaxThreadCount(100); //Set max thread count that can be added to thread pool.
 
         //(3) Create ScheduleTemplate(s)
         //ScheduleTemplate object contains the information about JobDetail and Trigger

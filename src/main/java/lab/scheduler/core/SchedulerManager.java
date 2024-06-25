@@ -161,14 +161,19 @@ public class SchedulerManager {
     }
 
     public void addScheduleJob(ScheduleTemplate template) throws SchedulerException {
-        if (schedulerRegistry.size() != 1) {
-            throw new SchedulerException("addScheduleJob method is only supported when there is only one scheduler in registry");
+        try {
+            if (schedulerRegistry.size() != 1) {
+                throw new SchedulerException("addScheduleJob method is only supported when there is only one scheduler in registry");
+            }
+            if (template == null) {
+                throw new IllegalArgumentException("ScheduleTemplate is null");
+            }
+            Scheduler scheduler = new ArrayList<>(schedulerRegistry.values()).getFirst();
+            addThread(1);
+            scheduler.scheduleJob(template.getJob(), template.getTrigger());
+        } catch (SchedulerException e) {
+
         }
-        if (template == null) {
-            throw new IllegalArgumentException("ScheduleTemplate is null");
-        }
-        Scheduler scheduler = new ArrayList<>(schedulerRegistry.values()).getFirst();
-        scheduler.scheduleJob(template.getJob(), template.getTrigger());
     }
 
     public void addScheduleJob(String schedulerID, ScheduleTemplate template) throws SchedulerException {
@@ -179,6 +184,7 @@ public class SchedulerManager {
         if (template == null) {
             throw new IllegalArgumentException("ScheduleTemplate is null");
         }
+        addThread(1);
         scheduler.scheduleJob(template.getJob(), template.getTrigger());
     }
 
@@ -187,6 +193,13 @@ public class SchedulerManager {
         if (scheduler == null) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " not found");
         }
+    }
 
+    private int addThread(int threadCount) {
+        ResizableSimpleThreadPool tp = ResizableSimpleThreadPool.getInstance();
+        if (tp != null) {
+            return tp.addWorkerThread(1);
+        }
+        return 0;
     }
 }

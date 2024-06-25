@@ -24,8 +24,6 @@ public class ResizableSimpleThreadPool implements ThreadPool {
 
     private boolean inheritGroup = true;
 
-    private boolean makeThreadsDaemons = false;
-
     private ThreadGroup threadGroup;
 
     private final Object nextRunnableLock = new Object();
@@ -42,11 +40,23 @@ public class ResizableSimpleThreadPool implements ThreadPool {
     private int lastIdNum = 1;
     private int maxThreadCount = 300;
 
+    private static ResizableSimpleThreadPool threadPool;
+
+    //This getInstance() method allows null return
+    public static ResizableSimpleThreadPool getInstance() {
+        return threadPool;
+    }
 
     public ResizableSimpleThreadPool() {
+        if (threadPool == null) {
+            threadPool = this;
+        }
     }
 
     public ResizableSimpleThreadPool(int threadCount, int threadPriority) {
+        if (threadPool == null) {
+            threadPool = this;
+        }
         setThreadCount(threadCount);
         setThreadPriority(threadPriority);
     }
@@ -101,19 +111,22 @@ public class ResizableSimpleThreadPool implements ThreadPool {
         this.inheritGroup = inheritGroup;
     }
 
-    public boolean isMakeThreadsDaemons() {
-        return makeThreadsDaemons;
-    }
-
-    public void setMakeThreadsDaemons(boolean makeThreadsDaemons) {
-        this.makeThreadsDaemons = makeThreadsDaemons;
-    }
-
     public void setInstanceId(String schedInstId) {
     }
 
     public void setInstanceName(String schedName) {
         schedulerInstanceName = schedName;
+    }
+
+    public void setMaxThreadCount(int maxThreadCount) {
+        if (maxThreadCount < 1) {
+            throw new IllegalArgumentException("maxThreadCount must be greater than 1");
+        }
+        this.maxThreadCount = maxThreadCount;
+    }
+
+    public int getMaxThreadCount() {
+        return maxThreadCount;
     }
 
     public void initialize() throws SchedulerConfigException {
@@ -182,17 +195,32 @@ public class ResizableSimpleThreadPool implements ThreadPool {
         return workers;
     }
 
-    public void addWorkerThread(int createCount) {
+    public int addWorkerThread(int createCount) {
+        if(workers == null) {
+            getLog().info("The thread pool " + ResizableSimpleThreadPool.class.getName() + " is not initialized");
+            return 0;
+        }
+
         if ((workers.size() + createCount) > maxThreadCount) {
-            getLog().debug("Max thread count reached. Current threads: " + workers.size() + ", Count to add: " + createCount + ", Max thread count: " + maxThreadCount);
-            return;
+            getLog().warn("Max thread count reached. Current threads: " + workers.size() + ", Count to add: " + createCount + ", Max thread count: " + maxThreadCount);
+            return 0;
         }
         Iterator<WorkerThread> workerThreads = createWorkerThreads(count).iterator();
         while(workerThreads.hasNext()) {
             WorkerThread wt = workerThreads.next();
             wt.start();
+            /*
+            Exception in thread "main" java.lang.IllegalThreadStateException
+                    at java.base/java.lang.Thread.start(Thread.java:1525)
+                    at lab.scheduler.core.ResizableSimpleThreadPool.addWorkerThread(ResizableSimpleThreadPool.java:211)
+                    at lab.scheduler.core.SchedulerManager.addThread(SchedulerManager.java:201)
+                    at lab.scheduler.core.SchedulerManager.addScheduleJob(SchedulerManager.java:187)
+                    at lab.scheduler.tutorial.Step2_StartCronScheduler.main(Step2_StartCronScheduler.java:64)
+            * */
             availWorkers.add(wt);
         }
+        getLog().info("Added " + createCount + " workers to the pool");
+        return createCount;
     }
 
 

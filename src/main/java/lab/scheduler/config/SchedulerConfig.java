@@ -1,5 +1,6 @@
 package lab.scheduler.config;
 
+import lab.scheduler.core.ResizableSimpleThreadPool;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +17,7 @@ public class SchedulerConfig {
     private JobClusteringConfig clusteringConfig;
     private boolean autoAdjustThreadCount = true;
     private int threadCount = 1;
+    private int maxThreadCount = 100;
     private String threadPoolName;
     private String threadPoolClass;
     private boolean shutdownAfterAllJobsDone = true;
@@ -32,6 +34,14 @@ public class SchedulerConfig {
     public void setThreadCount(int threadCount) {
         this.threadCount = threadCount;
         properties.setProperty("org.quartz.threadPool.threadCount", String.valueOf(threadCount));
+    }
+
+    public void setMaxThreadCount(int maxThreadCount) {
+        this.maxThreadCount = maxThreadCount;
+        properties.setProperty("org.quartz.threadPool.maxThreadCount", String.valueOf(maxThreadCount));
+        if (!properties.containsKey("org.quartz.threadPool.class")) {
+            properties.setProperty("org.quartz.threadPool.class", ResizableSimpleThreadPool.class.getName());
+        }
     }
 
     public void setThreadPoolName(String threadPoolName) {
