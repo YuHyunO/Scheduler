@@ -9,44 +9,55 @@ import org.quartz.utils.Key;
 import java.util.*;
 
 public class SchedulerManager {
-    private static final Map<String, Scheduler> SCHEDULER_REGISTRY = new HashMap<>();
-    private static final Map<String, SchedulerConfig> SCHEDULER_CONFIG_REGISTRY = new HashMap<>();
-    private static final Map<String, TriggerKey> TRIGGER_KEY_REGISTRY = new HashMap<>();
-    private static Class<? extends Job> defaultedJobClass;
+    private Map<String, Scheduler> schedulerRegistry;
+    private Map<String, SchedulerConfig> configRegistry;
+    private Map<String, TriggerKey> triggerKeyRegistry;
+    private Class<? extends Job> defaultedJobClass;
 
-    public static void setDefaultJobClass(Class<? extends Job> jobClass) {
+    private static SchedulerManager manager;
+
+    protected SchedulerManager() {}
+
+    public static SchedulerManager getInstance() {
+        if (manager == null) {
+            manager = new SchedulerManager();
+            manager.schedulerRegistry = new HashMap<>();
+            manager.configRegistry = new HashMap<>();
+            manager.triggerKeyRegistry = new HashMap<>();
+        }
+        return manager;
+    }
+
+    public void setDefaultJobClass(Class<? extends Job> jobClass) {
         if (!Job.class.isAssignableFrom(jobClass)) {
             throw new IllegalArgumentException("Job class must be an instance of " + Job.class.getName());
         }
         defaultedJobClass = jobClass;
     }
 
-    public static void setDefaultJobClass(String jobClassName) {
+    public void setDefaultJobClass(String jobClassName) {
         Class jobClass = null;
         try {
             jobClass = Class.forName(jobClassName);
         } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException("Could not find class: " + jobClass + ", ClassNotFoundException");
         }
-        if (!Job.class.isAssignableFrom(jobClass)) {
-            throw new IllegalArgumentException("Job class must be an instance of " + Job.class.getName());
-        }
-        defaultedJobClass = jobClass;
+        setDefaultJobClass(jobClass);
     }
 
-    public static Class<? extends Job> getDefaultJobClass() {
+    public Class<? extends Job> getDefaultJobClass() {
         return defaultedJobClass;
     }
 
-    public static String registerScheduler(SchedulerConfig config) throws SchedulerException {
+    public String registerScheduler(SchedulerConfig config) throws SchedulerException {
         return registerScheduler(null, config);
     }
 
-    public static String registerScheduler(String schedulerID, SchedulerConfig config) throws SchedulerException {
+    public String registerScheduler(String schedulerID, SchedulerConfig config) throws SchedulerException {
         if (schedulerID == null || schedulerID.isEmpty()) {
             schedulerID = Key.createUniqueName("SCHEDULER");
         }
-        if (SCHEDULER_REGISTRY.containsKey(schedulerID)) {
+        if (schedulerRegistry.containsKey(schedulerID)) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " already exists");
         }
         if (config == null) {
@@ -63,30 +74,30 @@ public class SchedulerManager {
             JobDetail jobDetail = template.getJob();
             Trigger trigger = template.getTrigger();
             scheduler.scheduleJob(jobDetail, trigger);
-            TRIGGER_KEY_REGISTRY.put(jobDetail.getKey().getName(), trigger.getKey());
+            triggerKeyRegistry.put(jobDetail.getKey().getName(), trigger.getKey());
         }
-        SCHEDULER_REGISTRY.put(schedulerID, scheduler);
-        SCHEDULER_CONFIG_REGISTRY.put(schedulerID, config);
+        schedulerRegistry.put(schedulerID, scheduler);
+        configRegistry.put(schedulerID, config);
         return schedulerID;
     }
 
-    public static Scheduler getScheduler(String schedulerID) {
-        return SCHEDULER_REGISTRY.get(schedulerID);
+    public Scheduler getScheduler(String schedulerID) {
+        return schedulerRegistry.get(schedulerID);
     }
 
-    public static SchedulerConfig getSchedulerConfig(String schedulerID) {
-        return SCHEDULER_CONFIG_REGISTRY.get(schedulerID);
+    public SchedulerConfig getSchedulerConfig(String schedulerID) {
+        return configRegistry.get(schedulerID);
     }
 
-    public static List<Scheduler> getAllSchedulers() {
-        return new ArrayList<>(SCHEDULER_REGISTRY.values());
+    public List<Scheduler> getAllSchedulers() {
+        return new ArrayList<>(schedulerRegistry.values());
     }
 
-    public static List<SchedulerConfig> getAllSchedulerConfigs() {
-        return new ArrayList<>(SCHEDULER_CONFIG_REGISTRY.values());
+    public List<SchedulerConfig> getAllSchedulerConfigs() {
+        return new ArrayList<>(configRegistry.values());
     }
 
-    public static void startScheduler(String schedulerID) throws SchedulerException {
+    public void startScheduler(String schedulerID) throws SchedulerException {
         Scheduler scheduler = getScheduler(schedulerID);
         if (scheduler == null) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " not found");
@@ -96,9 +107,9 @@ public class SchedulerManager {
         }
     }
 
-    public static Map<String, Exception> startAllSchedulers() throws SchedulerException {
+    public Map<String, Exception> startAllSchedulers() throws SchedulerException {
         Map<String, Exception> resultMap = new LinkedHashMap<>();
-        for (String schedulerID : SCHEDULER_REGISTRY.keySet()) {
+        for (String schedulerID : schedulerRegistry.keySet()) {
             try {
                 startScheduler(schedulerID);
                 resultMap.put(schedulerID, null);
@@ -109,20 +120,20 @@ public class SchedulerManager {
         return resultMap;
     }
 
-    public static void stopScheduler(String schedulerID) throws SchedulerException {
-        Scheduler scheduler = SCHEDULER_REGISTRY.get(schedulerID);
+    public void stopScheduler(String schedulerID) throws SchedulerException {
+        Scheduler scheduler = schedulerRegistry.get(schedulerID);
         if (scheduler == null) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " does not exist");
         }
-        SchedulerConfig config = SCHEDULER_CONFIG_REGISTRY.get(schedulerID);
+        SchedulerConfig config = configRegistry.get(schedulerID);
         if (scheduler.isStarted()) {
             scheduler.shutdown(config.isShutdownAfterAllJobsDone());
         }
     }
 
-    public static Map<String, Exception> stopAllSchedulers() {
+    public Map<String, Exception> stopAllSchedulers() {
         Map<String, Exception> resultMap = new LinkedHashMap<>();
-        for (String schedulerID : SCHEDULER_REGISTRY.keySet()) {
+        for (String schedulerID : schedulerRegistry.keySet()) {
             try {
                 stopScheduler(schedulerID);
                 resultMap.put(schedulerID, null);
@@ -133,34 +144,34 @@ public class SchedulerManager {
         return resultMap;
     }
 
-    public static void removeScheduler(String schedulerID) {
-        Scheduler scheduler = SCHEDULER_REGISTRY.get(schedulerID);
+    public void removeScheduler(String schedulerID) {
+        Scheduler scheduler = schedulerRegistry.get(schedulerID);
         try {
             stopScheduler(schedulerID);
         } catch (Exception e) {}
-        SCHEDULER_REGISTRY.remove(schedulerID);
-        SCHEDULER_CONFIG_REGISTRY.remove(schedulerID);
+        schedulerRegistry.remove(schedulerID);
+        configRegistry.remove(schedulerID);
     }
 
-    public static void removeAllSchedulers() {
-        List<String> schedulerIDs = new ArrayList<>(SCHEDULER_REGISTRY.keySet());
+    public void removeAllSchedulers() {
+        List<String> schedulerIDs = new ArrayList<>(schedulerRegistry.keySet());
         for (String schedulerID : schedulerIDs) {
             removeScheduler(schedulerID);
         }
     }
 
-    public static void addScheduleJob(ScheduleTemplate template) throws SchedulerException {
-        if (SCHEDULER_REGISTRY.size() != 1) {
+    public void addScheduleJob(ScheduleTemplate template) throws SchedulerException {
+        if (schedulerRegistry.size() != 1) {
             throw new SchedulerException("addScheduleJob method is only supported when there is only one scheduler in registry");
         }
         if (template == null) {
             throw new IllegalArgumentException("ScheduleTemplate is null");
         }
-        Scheduler scheduler = new ArrayList<>(SCHEDULER_REGISTRY.values()).getFirst();
+        Scheduler scheduler = new ArrayList<>(schedulerRegistry.values()).getFirst();
         scheduler.scheduleJob(template.getJob(), template.getTrigger());
     }
 
-    public static void addScheduleJob(String schedulerID, ScheduleTemplate template) throws SchedulerException {
+    public void addScheduleJob(String schedulerID, ScheduleTemplate template) throws SchedulerException {
         Scheduler scheduler = getScheduler(schedulerID);
         if (scheduler == null) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " not found");
@@ -171,7 +182,7 @@ public class SchedulerManager {
         scheduler.scheduleJob(template.getJob(), template.getTrigger());
     }
 
-    public static void removeScheduleJob(String schedulerID, String jobID) throws SchedulerException {
+    public void removeScheduleJob(String schedulerID, String jobID) throws SchedulerException {
         Scheduler scheduler = getScheduler(schedulerID);
         if (scheduler == null) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " not found");

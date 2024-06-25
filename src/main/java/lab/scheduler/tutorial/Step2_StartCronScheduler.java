@@ -10,13 +10,15 @@ public class Step2_StartCronScheduler {
 
     public static void main(String[] args) throws Exception {
         log.info("Start Tutorial");
+        //(1) Create SchedulerManager instance
+        SchedulerManager manager = SchedulerManager.getInstance();
 
-        //(1) Create SchedulerConfig
+        //(2) Create SchedulerConfig
         SchedulerConfig config = new SchedulerConfig();
         config.setAutoAdjustThreadCount(true); // <- The property 'autoAdjustThreadCount=true' enables that thread pool size is automatically sized with schedule Job count. Default value is 'true'.
         config.setThreadCount(7); // <- In this case, the effect of using 'setThreadCount(int count)' is ignored because 'autoAdjustThreadCount' is true as above.
 
-        //(2) Create ScheduleTemplate(s)
+        //(3) Create ScheduleTemplate(s)
         //ScheduleTemplate object contains the information about JobDetail and Trigger
         ScheduleTemplate template1 = new ScheduleTemplate(); //Create new ScheduleTemplate()
         template1.setJobClass(Step1_DefineJobClass.class); //Set the job class which implemented 'org.quartz.Job' interface. If it is null or not set, a default job class is retrieved from ScheduleManager
@@ -44,21 +46,21 @@ public class Step2_StartCronScheduler {
         template3.addJobParam("template name", "template3");
         template3.addJobParam("hobby", "playing piano");
 
-        //(3) Add ScheduleTemplates to SchedulerConfig
+        //(4) Add ScheduleTemplates to SchedulerConfig
         config.addScheduleTemplate(template1);
         config.addScheduleTemplate(template2);
         //config.addScheduleTemplate(template3); //Note that I didn't add 'template3' to SchedulerConfig. I am going to add this after Scheduler started
 
-        //(4) Start scheduler
-        String schdeulerID = SchedulerManager.registerScheduler(config); //Register the SchedulerConfig we made to the SchedulerManager.
+        //(5) Start scheduler
+        String schdeulerID = manager.registerScheduler(config); //Register the SchedulerConfig we made to the SchedulerManager.
                                                                          //This method creates new scheduler and returns the unique scheduler ID of it in string.
                                                                          //Scheduler ID must be remembered when you have schedulers more than two, and it used when control a specific scheduler and its jobs.
-        SchedulerManager.startScheduler(schdeulerID); //Start the specific scheduler
+        manager.startScheduler(schdeulerID); //Start the specific scheduler
         //SchedulerManager.startAllSchedulers(); //Start all schedulers
 
         Thread.sleep(7000);
 
-        SchedulerManager.addScheduleJob(schdeulerID, template3); //Add new ScheduleJob at scheduler's running
+        manager.addScheduleJob(schdeulerID, template3); //Add new ScheduleJob at scheduler's running
         //SchedulerManager.addScheduleJob(template3); //This method can be used when only one scheduler exists in the SchedulerManager
 
     }

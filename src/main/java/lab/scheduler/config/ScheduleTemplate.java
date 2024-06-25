@@ -110,7 +110,7 @@ public class ScheduleTemplate {
             jobName = Key.createUniqueName(jobGroupName);
         }
         if (jobClass == null) {
-            Class<? extends Job> clazz = SchedulerManager.getDefaultJobClass();
+            Class<? extends Job> clazz = SchedulerManager.getInstance().getDefaultJobClass();
             if (clazz == null) {
                 throw new IllegalStateException("Job class not set. You must specify at ScheduleTemplate or a default job class at ScheduleManager.");
             }
