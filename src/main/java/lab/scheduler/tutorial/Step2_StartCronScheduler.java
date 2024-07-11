@@ -24,7 +24,7 @@ public class Step2_StartCronScheduler {
         ScheduleTemplate template1 = new ScheduleTemplate(); //Create new ScheduleTemplate()
         template1.setJobClass(Step1_DefineJobClass.class); //Set the job class which implemented 'org.quartz.Job' interface. If it is null or not set, a default job class is retrieved from ScheduleManager
         template1.setCronExpression("0/3 * * * * ?"); //Set cron expression. It is verified internally by CronExpression.isValidExpression(String expression) method.
-        template1.setjobName("MyServiceLogic_1"); //Set unique job name. When null, it is created internally.
+        template1.setJobName("MyServiceLogic_1"); //Set unique job name. When null, it is created internally.
         template1.setPriority(10); //Set this job's priority. Higher priority number has higher priority in execution. Default value is -1.
         template1.addJobParam("template name", "template1"); //Set job parameter you want to use in job class
         template1.addJobParam("favorite number", 7); //Set job parameter you want to use in job class
@@ -32,7 +32,7 @@ public class Step2_StartCronScheduler {
         ScheduleTemplate template2 = new ScheduleTemplate();
         template2.setJobClass("lab.scheduler.tutorial.Step1_DefineJobClass"); //Also possible setting job class with string name
         template2.setCronExpression("0/3 * * * * ?");
-        template2.setjobName("MyServiceLogic_2");
+        template2.setJobName("MyServiceLogic_2");
         template2.setPriority(9);
         template2.addJobParam("template name", "template2");
         template2.addJobParam("favorite fruit", "grape");
@@ -61,8 +61,11 @@ public class Step2_StartCronScheduler {
 
         Thread.sleep(7000);
 
-        manager.addScheduleJob(schdeulerID, template3); //Add new ScheduleJob at scheduler's running
+        manager.addScheduleJob(schdeulerID, template3, true); //Add new job at scheduler's running. The boolean parameter of this method means that whether to add a new thread to the pool.
         //SchedulerManager.addScheduleJob(template3); //This method can be used when only one scheduler exists in the SchedulerManager
+
+        Thread.sleep(7000);
+        manager.removeScheduleJob(schdeulerID, "MyServiceLogic_1", true); //Remove a job at scheduler's running. The boolean parameter of this method means that whether to remove a thread from the pool.
 
     }
 

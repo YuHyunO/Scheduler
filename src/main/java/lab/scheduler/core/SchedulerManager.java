@@ -2,21 +2,24 @@ package lab.scheduler.core;
 
 import lab.scheduler.config.ScheduleTemplate;
 import lab.scheduler.config.SchedulerConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.utils.Key;
 
 import java.util.*;
 
+@Slf4j
 public class SchedulerManager {
     private Map<String, Scheduler> schedulerRegistry;
     private Map<String, SchedulerConfig> configRegistry;
     private Map<String, TriggerKey> triggerKeyRegistry;
+    private Map<String, JobKey> jobKeyRegistry;
     private Class<? extends Job> defaultedJobClass;
 
     private static SchedulerManager manager;
 
-    protected SchedulerManager() {}
+    private SchedulerManager() {}
 
     public static SchedulerManager getInstance() {
         if (manager == null) {
@@ -24,6 +27,7 @@ public class SchedulerManager {
             manager.schedulerRegistry = new HashMap<>();
             manager.configRegistry = new HashMap<>();
             manager.triggerKeyRegistry = new HashMap<>();
+            manager.jobKeyRegistry = new HashMap<>();
         }
         return manager;
     }
@@ -74,7 +78,9 @@ public class SchedulerManager {
             JobDetail jobDetail = template.getJob();
             Trigger trigger = template.getTrigger();
             scheduler.scheduleJob(jobDetail, trigger);
-            triggerKeyRegistry.put(jobDetail.getKey().getName(), trigger.getKey());
+            String jobName = jobDetail.getKey().getName();
+            jobKeyRegistry.put(jobName, jobDetail.getKey());
+            triggerKeyRegistry.put(jobName, trigger.getKey());
         }
         schedulerRegistry.put(schedulerID, scheduler);
         configRegistry.put(schedulerID, config);
@@ -176,7 +182,7 @@ public class SchedulerManager {
         }
     }
 
-    public void addScheduleJob(String schedulerID, ScheduleTemplate template) throws SchedulerException {
+    public void addScheduleJob(String schedulerID, ScheduleTemplate template, boolean addThread) throws SchedulerException {
         Scheduler scheduler = getScheduler(schedulerID);
         if (scheduler == null) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " not found");
@@ -184,21 +190,47 @@ public class SchedulerManager {
         if (template == null) {
             throw new IllegalArgumentException("ScheduleTemplate is null");
         }
-        addThread(1);
+        if (addThread) {
+            addThread(1);
+        }
         scheduler.scheduleJob(template.getJob(), template.getTrigger());
+        log.info("Added the job '{}' to the scheduler '{}'", template.getJobName(), schedulerID);
     }
 
-    public void removeScheduleJob(String schedulerID, String jobID) throws SchedulerException {
+    public boolean removeScheduleJob(String schedulerID, String jobID, boolean removeThread) throws SchedulerException {
         Scheduler scheduler = getScheduler(schedulerID);
         if (scheduler == null) {
             throw new SchedulerException("Scheduler with ID " + schedulerID + " not found");
         }
+        JobKey key = jobKeyRegistry.get(jobID);
+        if (key != null) {
+            boolean result = scheduler.deleteJob(key);
+            if (!result) {
+                log.warn("Couldn't remove the job '{}'", jobID);
+                return false;
+            }
+            log.info("Removed the job '{}' from the scheduler '{}'", jobID, schedulerID);
+            if (removeThread) {
+                removeThread(1);
+            }
+        } else {
+            log.warn("Couldn't remove the job '{}'. job key is null", jobID);
+        }
+        return false;
     }
 
-    private int addThread(int threadCount) {
+    private int addThread(int addCount) {
         ResizableSimpleThreadPool tp = ResizableSimpleThreadPool.getInstance();
         if (tp != null) {
-            return tp.addWorkerThread(threadCount);
+            return tp.addWorkerThread(addCount);
+        }
+        return 0;
+    }
+
+    private int removeThread(int removeCount) {
+        ResizableSimpleThreadPool tp = ResizableSimpleThreadPool.getInstance();
+        if (tp != null) {
+            return tp.removeWorkerThread(removeCount);
         }
         return 0;
     }

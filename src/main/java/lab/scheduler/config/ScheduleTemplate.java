@@ -132,7 +132,7 @@ public class ScheduleTemplate {
         return builder.build();
     }
 
-    public void setjobName(String jobName) {
+    public void setJobName(String jobName) {
         if (jobName != null && jobName.isEmpty()) {
             jobName = null;
         }

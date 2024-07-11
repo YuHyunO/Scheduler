@@ -222,6 +222,36 @@ public class ResizableSimpleThreadPool implements ThreadPool {
         return createCount;
     }
 
+    public int removeWorkerThread(int removeCount) {
+        if (removeCount == workers.size()) {
+            removeCount = workers.size();
+        }
+        if (removeCount <= 0) {
+            return 0;
+        }
+
+        int removedCount = 0;
+        synchronized (nextRunnableLock) {
+            getLog().info("Removing " + removeCount + " workers from the pool");
+            if (workers == null)
+                return 0;
+
+            Iterator<WorkerThread> availThreads = availWorkers.iterator();
+            while(availThreads.hasNext()) {
+                if (removedCount == removeCount) {
+                    getLog().info("Removed " + removeCount + " workers from the pool");
+                    nextRunnableLock.notifyAll();
+                    break;
+                }
+                WorkerThread wt = availThreads.next();
+                wt.shutdown();
+                availWorkers.remove(wt);
+                ++removedCount;
+            }
+        }
+        return removedCount;
+    }
+
 
     public void shutdown() {
         shutdown(true);
