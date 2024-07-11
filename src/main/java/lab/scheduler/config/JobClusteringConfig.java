@@ -38,7 +38,6 @@ public class JobClusteringConfig {
         clusterType = clusterType.toUpperCase().trim();
         switch (clusterType) {
             case "TCP_COMMUNICATION" : case "TCP" : this.clusterType = JobClusterType.TCP_COMMUNICATION; break;
-            case "HTTP_COMMUNICATION" : case "HTTP" : this.clusterType = JobClusterType.HTTP_COMMUNICATION; break;
             case "DB_JOBSTORE" : case "DB" : this.clusterType = JobClusterType.DB_JOBSTORE; break;
             case "FILE_JOBSTORE" : case "FILE" : this.clusterType = JobClusterType.FILE_JOBSTORE; break;
             default: throw new IllegalArgumentException("Unknown cluster type: " + clusterType);

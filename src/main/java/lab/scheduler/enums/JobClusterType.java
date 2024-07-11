@@ -4,5 +4,4 @@ public enum JobClusterType {
     DB_JOBSTORE,
     FILE_JOBSTORE,
     TCP_COMMUNICATION,
-    HTTP_COMMUNICATION
 }
