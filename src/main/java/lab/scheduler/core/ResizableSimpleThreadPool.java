@@ -8,6 +8,8 @@ import org.quartz.spi.ThreadPool;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -37,7 +39,7 @@ public class ResizableSimpleThreadPool implements ThreadPool {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private String schedulerInstanceName;
-    private int lastIdNum = 1;
+    private int lastIdNum = 0;
     private int maxThreadCount = 300;
 
     private static ResizableSimpleThreadPool threadPool;
@@ -71,6 +73,9 @@ public class ResizableSimpleThreadPool implements ThreadPool {
 
     public void setThreadCount(int count) {
         this.count = count;
+        if (this.count > maxThreadCount) {
+            maxThreadCount = this.count;
+        }
     }
 
     public int getThreadCount() {
@@ -138,6 +143,7 @@ public class ResizableSimpleThreadPool implements ThreadPool {
             throw new SchedulerConfigException(
                     "Thread count must be > 0");
         }
+
         if (prio <= 0 || prio > 9) {
             throw new SchedulerConfigException(
                     "Thread priority must be > 0 and <= 9");
@@ -176,23 +182,24 @@ public class ResizableSimpleThreadPool implements ThreadPool {
         if (workers == null) {
             workers = new LinkedList<WorkerThread>();
         }
+        List<WorkerThread> newWorkerThreads = new LinkedList<>();
         for (int i = 1; i<= createCount; ++i) {
             String threadPrefix = getThreadNamePrefix();
             if (threadPrefix == null) {
                 threadPrefix = schedulerInstanceName + "_Worker";
             }
             WorkerThread wt = new WorkerThread(this, threadGroup,
-                    threadPrefix + "-" + lastIdNum,
+                    threadPrefix + "-" + (++lastIdNum),
                     getThreadPriority());
             if (isThreadsInheritContextClassLoaderOfInitializingThread()) {
                 wt.setContextClassLoader(Thread.currentThread()
                         .getContextClassLoader());
             }
-            workers.add(wt);
-            ++lastIdNum;
+            newWorkerThreads.add(wt);
         }
+        workers.addAll(newWorkerThreads);
 
-        return workers;
+        return newWorkerThreads;
     }
 
     public int addWorkerThread(int createCount) {
@@ -205,18 +212,10 @@ public class ResizableSimpleThreadPool implements ThreadPool {
             getLog().warn("Max thread count reached. Current threads: " + workers.size() + ", Count to add: " + createCount + ", Max thread count: " + maxThreadCount);
             return 0;
         }
-        Iterator<WorkerThread> workerThreads = createWorkerThreads(count).iterator();
-        while(workerThreads.hasNext()) {
-            WorkerThread wt = workerThreads.next();
+        Iterator<WorkerThread> addedWorkerThreads = createWorkerThreads(createCount).iterator();
+        while(addedWorkerThreads.hasNext()) {
+            WorkerThread wt = addedWorkerThreads.next();
             wt.start();
-            /*
-            Exception in thread "main" java.lang.IllegalThreadStateException
-                    at java.base/java.lang.Thread.start(Thread.java:1525)
-                    at lab.scheduler.core.ResizableSimpleThreadPool.addWorkerThread(ResizableSimpleThreadPool.java:211)
-                    at lab.scheduler.core.SchedulerManager.addThread(SchedulerManager.java:201)
-                    at lab.scheduler.core.SchedulerManager.addScheduleJob(SchedulerManager.java:187)
-                    at lab.scheduler.tutorial.Step2_StartCronScheduler.main(Step2_StartCronScheduler.java:64)
-            * */
             availWorkers.add(wt);
         }
         getLog().info("Added " + createCount + " workers to the pool");
@@ -295,7 +294,6 @@ public class ResizableSimpleThreadPool implements ThreadPool {
                         Thread.currentThread().interrupt();
                     }
                 }
-
                 getLog().debug("No executing jobs remaining, all threads stopped.");
             }
             getLog().debug("Shutdown of threadpool complete.");
@@ -457,11 +455,6 @@ public class ResizableSimpleThreadPool implements ThreadPool {
             }
         }
 
-        /**
-         * <p>
-         * Loop, executing targets as they are received.
-         * </p>
-         */
         @Override
         public void run() {
             boolean ran = false;

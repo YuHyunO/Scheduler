@@ -198,7 +198,7 @@ public class SchedulerManager {
     private int addThread(int threadCount) {
         ResizableSimpleThreadPool tp = ResizableSimpleThreadPool.getInstance();
         if (tp != null) {
-            return tp.addWorkerThread(1);
+            return tp.addWorkerThread(threadCount);
         }
         return 0;
     }
