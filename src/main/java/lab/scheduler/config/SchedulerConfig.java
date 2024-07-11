@@ -39,9 +39,9 @@ public class SchedulerConfig {
     public void setMaxThreadCount(int maxThreadCount) {
         this.maxThreadCount = maxThreadCount;
         properties.setProperty("org.quartz.threadPool.maxThreadCount", String.valueOf(maxThreadCount));
-        if (!properties.containsKey("org.quartz.threadPool.class")) {
-            properties.setProperty("org.quartz.threadPool.class", ResizableSimpleThreadPool.class.getName());
-        }
+        properties.setProperty("org.quartz.threadPool.class", ResizableSimpleThreadPool.class.getName());
+        /*if (!properties.containsKey("org.quartz.threadPool.class")) {
+        }*/
     }
 
     public void setThreadPoolName(String threadPoolName) {
@@ -49,9 +49,14 @@ public class SchedulerConfig {
         properties.setProperty("org.quartz.scheduler.threadName", threadPoolName);
     }
 
+    @Deprecated
+    /**
+     * Deprecated this method for compatibility with ResizableSimpleThreadPool
+     * */
     public void setThreadPoolClass(String threadPoolClass) {
         this.threadPoolClass = threadPoolClass;
-        properties.setProperty("org.quartz.threadPool.class", threadPoolClass);
+        //properties.setProperty("org.quartz.threadPool.class", threadPoolClass);
+        properties.setProperty("org.quartz.threadPool.class", ResizableSimpleThreadPool.class.getName());
     }
 
     public void setProperties(Properties properties) {

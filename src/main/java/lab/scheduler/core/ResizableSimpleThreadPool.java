@@ -1,17 +1,14 @@
 package lab.scheduler.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.quartz.SchedulerConfigException;
 import org.quartz.spi.ThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 
 public class ResizableSimpleThreadPool implements ThreadPool {
 
