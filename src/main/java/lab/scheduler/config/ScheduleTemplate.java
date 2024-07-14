@@ -59,9 +59,13 @@ public class ScheduleTemplate {
                 TriggerBuilder trgBuilder = TriggerBuilder.newTrigger()
                         .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
+                        .startAt(startTime)
                         .forJob(jobName, jobGroupName);
+                if (endTime != null) {
+                    trgBuilder.endAt(endTime);
+                }
                 SimpleScheduleBuilder simSchd = SimpleScheduleBuilder.simpleSchedule();
-                if (repeatCount == -1) {
+                if (repeatCount <= -1) {
                     simSchd.repeatForever();
                 } else {
                     simSchd.withRepeatCount(repeatCount);
@@ -72,6 +76,7 @@ public class ScheduleTemplate {
                         case MINUTE -> simSchd.withIntervalInMinutes(repeatInterval);
                         case SECOND -> simSchd.withIntervalInSeconds(repeatInterval);
                         case DAY -> simSchd.withIntervalInMilliseconds(((long)repeatInterval) * 60 * 60 * 24 * 1000);
+                        default -> throw new IllegalStateException("Unrecognized intervalUnit: " + intervalUnit);
                     }
                 }
                 return trgBuilder.withSchedule(simSchd).build();
@@ -100,9 +105,9 @@ public class ScheduleTemplate {
                         .forJob(jobName, jobGroupName)
                         .build();
             }
+            default -> throw new IllegalArgumentException("Unsupported trigger type: " + triggerType);
         }
 
-        return null;
     }
 
     public JobDetail getJob() {
@@ -198,7 +203,7 @@ public class ScheduleTemplate {
     }
 
     public void setStartTime(String startTime) {
-        this.endTime = toFormattedDate(startTime);
+        this.startTime = toFormattedDate(startTime);
     }
 
     public void setEndTime(Date endTime) {

@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JobClusterContext {
 
     private static JobClusterContext context;
-    private Map<String, JobClusterInfo> jobClusterInfos;
+    private Map<String, HistoryHolder> jobHistoryHolders;
 
     private JobClusterContext() {}
 
@@ -14,17 +14,17 @@ public class JobClusterContext {
     public static JobClusterContext getInstance() {
         if (context == null) {
             context = new JobClusterContext();
-            context.jobClusterInfos = new ConcurrentHashMap<>();
+            context.jobHistoryHolders = new ConcurrentHashMap<>();
         }
         return context;
     }
 
 
-    private class JobClusterInfo {
+    private class HistoryHolder {
         String jobID;
         boolean inProcess;
 
-        JobClusterInfo(String jobID) {
+        HistoryHolder(String jobID) {
             this.jobID = jobID;
         }
 
