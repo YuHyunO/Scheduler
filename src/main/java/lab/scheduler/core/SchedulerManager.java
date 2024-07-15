@@ -53,8 +53,15 @@ public class SchedulerManager {
         return defaultedJobClass;
     }
 
-    public String registerScheduler(SchedulerConfig config) throws SchedulerException {
-        return registerScheduler(null, config);
+    public String registerScheduler(SchedulerConfig config) {
+        try {
+            return registerScheduler(null, config);
+        } catch (Exception e) {
+            log.error("", e);
+            e.printStackTrace();
+            System.exit(-1);
+            return null;
+        }
     }
 
     public String registerScheduler(String schedulerID, SchedulerConfig config) throws SchedulerException {

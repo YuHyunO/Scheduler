@@ -13,9 +13,11 @@ public class Step1_DefineJobClass implements Job {
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         JobDetail jobDetail = jobExecutionContext.getJobDetail();
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
+        Trigger trigger = jobExecutionContext.getTrigger();
 
         StringBuilder logBd = new StringBuilder();
         logBd.append("\n---------------------\n");
+        logBd.append(">Trigger Class: " + trigger.getClass() + "\n");
         logBd.append(">Job Name: " + jobDetail.getKey().getName() + "\n");
         logBd.append(">Scheduled Fire Time: " + jobExecutionContext.getScheduledFireTime() + "\n");
         logBd.append(">Fire Time: " + jobExecutionContext.getFireTime() + "\n");

@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.DateBuilder;
 
 @Slf4j
-public class Step3_StartSimpleScheduler {
+public class Step4_StartCalendarIntervalScheduler {
 
     public static void main(String[] args) throws Exception {
         log.info("Start simple trigger");
@@ -24,11 +24,10 @@ public class Step3_StartSimpleScheduler {
         //(3) Create ScheduleTemplate(s)
         //ScheduleTemplate object contains the information about JobDetail and Trigger
         ScheduleTemplate template1 = new ScheduleTemplate(); //Create new ScheduleTemplate()
-        template1.setTriggerType(TriggerType.SIMPLE_TRIGGER); //Set this template's triggerType to SIMPLE_TRIGGER.
+        template1.setTriggerType(TriggerType.CALENDAR_INTERVAL_TRIGGER); //Set this template's triggerType to CALENDAR_INTERVAL_TRIGGER.
         template1.setJobClass(Step1_DefineJobClass.class); //Set the job class which implemented 'org.quartz.Job' interface. If it is null or not set, a default job class is retrieved from ScheduleManager
-        template1.setStartTime("2024-07-14 17:20:55"); //Set start time
+        template1.setStartTime("2024-07-15 14:33:55"); //Set start time
         template1.setEndTime("2024-07-16 17:24:20"); //Set end time
-        template1.setRepeatCount(-1); //Set repeat count. Minus number means repeat forever.
         template1.setRepeatInterval(5); //Set repeat interval. Interval unit must be defined by using the method 'setIntervalUnit'.
         template1.setIntervalUnit(DateBuilder.IntervalUnit.SECOND); //Set repeat interval unit.
         template1.setJobName("MyServiceLogic_1"); //Set unique job name. When null, it is created internally.
@@ -37,10 +36,9 @@ public class Step3_StartSimpleScheduler {
         template1.addJobParam("favorite number", 7); //Set job parameter you want to use in job class
 
         ScheduleTemplate template2 = new ScheduleTemplate();
-        template2.setTriggerType(TriggerType.SIMPLE_TRIGGER);
+        template2.setTriggerType(TriggerType.CALENDAR_INTERVAL_TRIGGER);
         template2.setJobClass(Step1_DefineJobClass.class);
         template2.setStartTime("NOW");
-        template2.setRepeatCount(3);
         template2.setRepeatInterval(3);
         template2.setIntervalUnit(DateBuilder.IntervalUnit.SECOND);
         template2.setJobName("MyServiceLogic_2");
