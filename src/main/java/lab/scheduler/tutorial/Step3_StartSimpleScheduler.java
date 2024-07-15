@@ -26,8 +26,8 @@ public class Step3_StartSimpleScheduler {
         ScheduleTemplate template1 = new ScheduleTemplate(); //Create new ScheduleTemplate()
         template1.setTriggerType(TriggerType.SIMPLE_TRIGGER); //Set this template's triggerType to SIMPLE_TRIGGER.
         template1.setJobClass(Step1_DefineJobClass.class); //Set the job class which implemented 'org.quartz.Job' interface. If it is null or not set, a default job class is retrieved from ScheduleManager
-        template1.setStartTime("2024-07-14 17:20:55"); //Set start time
-        template1.setEndTime("2024-07-16 17:24:20"); //Set end time
+        template1.setStartTime("2024-07-14 17:20:55"); //Set start time. If start time is not set or null, the job started immediately when scheduler is started.
+        template1.setEndTime("2024-07-16 17:24:20"); //Set end time. If end time is not set or null, the end time is set to 9999-12-31 23:59:59.
         template1.setRepeatCount(-1); //Set repeat count. Minus number means repeat forever.
         template1.setRepeatInterval(5); //Set repeat interval. Interval unit must be defined by using the method 'setIntervalUnit'.
         template1.setIntervalUnit(DateBuilder.IntervalUnit.SECOND); //Set repeat interval unit.

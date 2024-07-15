@@ -1,6 +1,7 @@
 package lab.scheduler.core;
 
 import org.quartz.SchedulerConfigException;
+import org.quartz.simpl.SimpleThreadPool;
 import org.quartz.spi.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,50 +13,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ResizableSimpleThreadPool implements ThreadPool {
 
-    private int count = -1;
-
+    private int count = 1;
+    private int maxThreadCount = 300;
     private int prio = Thread.NORM_PRIORITY;
-
     private boolean isShutdown = false;
     private boolean handoffPending = false;
-
     private boolean inheritLoader = false;
-
     private boolean inheritGroup = true;
-
     private ThreadGroup threadGroup;
-
     private final Object nextRunnableLock = new Object();
-
     private List<WorkerThread> workers;
     private LinkedList<WorkerThread> availWorkers = new LinkedList<WorkerThread>();
     private LinkedList<WorkerThread> busyWorkers = new LinkedList<WorkerThread>();
-
     private String threadNamePrefix;
+    private String schedulerInstanceName;
+    private String schedulerInstanceId;
+    private int lastIdNum = 0;
+    private boolean minSizeReached = false;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private String schedulerInstanceName;
-    private int lastIdNum = 0;
-    private int maxThreadCount = 300;
-
-    private static ResizableSimpleThreadPool threadPool;
-
-    //This getInstance() method allows null return
-    public static ResizableSimpleThreadPool getInstance() {
-        return threadPool;
-    }
-
-    public ResizableSimpleThreadPool() {
-        if (threadPool == null) {
-            threadPool = this;
-        }
-    }
+    public ResizableSimpleThreadPool() {}
 
     public ResizableSimpleThreadPool(int threadCount, int threadPriority) {
-        if (threadPool == null) {
-            threadPool = this;
-        }
         setThreadCount(threadCount);
         setThreadPriority(threadPriority);
     }
@@ -113,11 +93,12 @@ public class ResizableSimpleThreadPool implements ThreadPool {
         this.inheritGroup = inheritGroup;
     }
 
-    public void setInstanceId(String schedInstId) {
+    public void setInstanceId(String schedulerInstanceId) {
+        this.schedulerInstanceId = schedulerInstanceId;
     }
 
-    public void setInstanceName(String schedName) {
-        schedulerInstanceName = schedName;
+    public void setInstanceName(String schedulerInstanceName) {
+        this.schedulerInstanceName = schedulerInstanceName;
     }
 
     public void setMaxThreadCount(int maxThreadCount) {
@@ -159,7 +140,6 @@ public class ResizableSimpleThreadPool implements ThreadPool {
             threadGroup = new ThreadGroup(parent, schedulerInstanceName + "-ResizableSimpleThreadPool");
         }
 
-
         if (isThreadsInheritContextClassLoaderOfInitializingThread()) {
             getLog().info(
                     "Job execution threads will use class loader of thread: "
@@ -173,6 +153,7 @@ public class ResizableSimpleThreadPool implements ThreadPool {
             wt.start();
             availWorkers.add(wt);
         }
+        ResizableSimpleThreadPoolManager.getInstance().register(schedulerInstanceId, this);
     }
 
     protected List<WorkerThread> createWorkerThreads(int createCount) {
@@ -199,9 +180,23 @@ public class ResizableSimpleThreadPool implements ThreadPool {
         return newWorkerThreads;
     }
 
-    public int addWorkerThread(int createCount) {
+    int addWorkerThread(int createCount) {
         if(workers == null) {
             getLog().info("The thread pool " + ResizableSimpleThreadPool.class.getName() + " is not initialized");
+            return 0;
+        }
+
+        if (minSizeReached) { //This flag means that all jobs of this pool were removed and the current pool size is 1.
+            createCount = createCount - 1; //Prevent the increase of unnecessary thread.
+            if (createCount >= 0) {
+                minSizeReached = false; //Change flag to false only when the add size is greater or equal than 0.
+            }
+            if (createCount == 0) { //The createCount '0' at this 'if block' means that it originally '1'. The pool already has 1 thread in it, so no necessity to add.
+                return 0;
+            }
+        }
+
+        if (createCount <= 0) {
             return 0;
         }
 
@@ -209,6 +204,7 @@ public class ResizableSimpleThreadPool implements ThreadPool {
             getLog().warn("Max thread count reached. Current threads: " + workers.size() + ", Count to add: " + createCount + ", Max thread count: " + maxThreadCount);
             return 0;
         }
+
         Iterator<WorkerThread> addedWorkerThreads = createWorkerThreads(createCount).iterator();
         while(addedWorkerThreads.hasNext()) {
             WorkerThread wt = addedWorkerThreads.next();
@@ -219,10 +215,17 @@ public class ResizableSimpleThreadPool implements ThreadPool {
         return createCount;
     }
 
-    public int removeWorkerThread(int removeCount) {
-        if (removeCount == workers.size()) {
-            removeCount = workers.size();
+    int removeWorkerThread(int removeCount) {
+        int currentSize = workers.size();
+        if (removeCount >= currentSize) {
+            removeCount = currentSize - 1; //Thread pool must have 1 thread at least.
         }
+
+        if (currentSize == 1) { //Thread pool must have 1 thread at least.
+            minSizeReached = true; //This flag means that all jobs of this pool were removed.
+            return 0;
+        }
+
         if (removeCount <= 0) {
             return 0;
         }
@@ -325,6 +328,7 @@ public class ResizableSimpleThreadPool implements ThreadPool {
             }
             getLog().debug("Shutdown of threadpool complete.");
         }
+        ResizableSimpleThreadPoolManager.getInstance().remove(schedulerInstanceName);
     }
 
     /**
