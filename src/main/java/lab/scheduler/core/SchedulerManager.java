@@ -14,6 +14,7 @@ import java.util.*;
 public class SchedulerManager {
     private Map<String, Scheduler> schedulerRegistry;
     private Map<String, SchedulerConfig> configRegistry;
+    private int currentThreadPoolSize;
     private Map<String, TriggerKey> triggerKeyRegistry;
     private Map<String, JobKey> jobKeyRegistry;
     private Class<? extends Job> defaultedJobClass;
