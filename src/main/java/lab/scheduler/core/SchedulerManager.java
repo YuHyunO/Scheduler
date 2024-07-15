@@ -2,6 +2,7 @@ package lab.scheduler.core;
 
 import lab.scheduler.config.ScheduleTemplate;
 import lab.scheduler.config.SchedulerConfig;
+import lab.scheduler.listener.NextFireTimeCheckTriggerListener;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -76,19 +77,25 @@ public class SchedulerManager {
         }
         Properties props = config.getProperties();
         SchedulerFactory factory = new StdSchedulerFactory(props);
-        List<ScheduleTemplate> templates = config.getScheduleTemplates();
+        Map<String, ScheduleTemplate> templates = config.getScheduleTemplates();
         if (templates == null || templates.isEmpty()) {
             throw new IllegalArgumentException("ScheduleTemplates are null or empty");
         }
         Scheduler scheduler = factory.getScheduler();
-        for (ScheduleTemplate template : templates) {
+        for (String jobName : templates.keySet()) {
+            ScheduleTemplate template = templates.get(jobName);
             JobDetail jobDetail = template.getJob();
+            JobDataMap dataMap = jobDetail.getJobDataMap();
+            if (dataMap != null) {
+                dataMap.put("schedulerID", schedulerID);
+            }
             Trigger trigger = template.getTrigger();
             scheduler.scheduleJob(jobDetail, trigger);
-            String jobName = jobDetail.getKey().getName();
             jobKeyRegistry.put(jobName, jobDetail.getKey());
             triggerKeyRegistry.put(jobName, trigger.getKey());
         }
+        addTriggerListener(scheduler, new NextFireTimeCheckTriggerListener());
+
         schedulerRegistry.put(schedulerID, scheduler);
         configRegistry.put(schedulerID, config);
         return schedulerID;
@@ -108,6 +115,14 @@ public class SchedulerManager {
 
     public List<SchedulerConfig> getAllSchedulerConfigs() {
         return new ArrayList<>(configRegistry.values());
+    }
+
+    public void addJobListener(Scheduler scheduler, JobListener jobListener) throws SchedulerException {
+        scheduler.getListenerManager().addJobListener(jobListener);
+    }
+
+    public void addTriggerListener(Scheduler scheduler, TriggerListener triggerListener) throws SchedulerException {
+        scheduler.getListenerManager().addTriggerListener(triggerListener);
     }
 
     public void startScheduler(String schedulerID) throws SchedulerException {
@@ -224,6 +239,12 @@ public class SchedulerManager {
             log.warn("Couldn't remove the job '{}'. job key is null", jobID);
         }
         return false;
+    }
+
+    public boolean removeScheduleJob(String schedulerID, String jobID) throws SchedulerException {
+        Scheduler scheduler = getScheduler(schedulerID);
+        boolean removeThread = configRegistry.get(schedulerID).getScheduleTemplate(jobID).isRemoveThreadWhenNextJobNotExist();
+        return removeScheduleJob(schedulerID, jobID, removeThread);
     }
 
     private int addThread(int addCount) {

@@ -40,7 +40,7 @@ public class Step3_StartSimpleScheduler {
         template2.setTriggerType(TriggerType.SIMPLE_TRIGGER);
         template2.setJobClass(Step1_DefineJobClass.class);
         template2.setStartTime("NOW");
-        template2.setRepeatCount(3);
+        template2.setRepeatCount(1);
         template2.setRepeatInterval(3);
         template2.setIntervalUnit(DateBuilder.IntervalUnit.SECOND);
         template2.setJobName("MyServiceLogic_2");

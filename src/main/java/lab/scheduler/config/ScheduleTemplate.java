@@ -33,6 +33,7 @@ public class ScheduleTemplate {
     private Map<String, Object> jobParams;
     private TriggerType triggerType;
     private Class<? extends Job> jobClass;
+    private boolean removeThreadWhenNextJobNotExist = true;
     private JobClusterOption jobClusterOption = JobClusterOption.FOLLOW_SCHEDULER_DEFAULT;
 
     public Trigger getTrigger() throws IllegalStateException {
@@ -93,7 +94,6 @@ public class ScheduleTemplate {
                         .withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule()
                                 .withInterval(repeatInterval, intervalUnit))
                         .forJob(jobName, jobGroupName) ;
-
                 if (startTime == null) {
                     startTime = new Date();
                 }
@@ -124,9 +124,8 @@ public class ScheduleTemplate {
                 trgBuilder.startAt(startTime);
                 trgBuilder.endAt(endTime);
             }
-            default -> throw new IllegalArgumentException("Unsupported trigger type: " + triggerType);
         }
-
+        throw new IllegalArgumentException("Unsupported trigger type: " + triggerType);
     }
 
     public JobDetail getJob() {

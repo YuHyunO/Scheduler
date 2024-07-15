@@ -6,9 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 @Slf4j
 @Data
@@ -22,7 +20,7 @@ public class SchedulerConfig {
     private String threadPoolClass;
     private boolean shutdownAfterAllJobsDone = true;
     private Properties properties = new Properties();
-    private List<ScheduleTemplate> scheduleTemplates = new ArrayList<>();
+    private Map<String, ScheduleTemplate> scheduleTemplates = new HashMap<>();
 
     public Properties getProperties() {
         if (autoAdjustThreadCount) {
@@ -77,7 +75,7 @@ public class SchedulerConfig {
         }
     }
 
-    public void setScheduleTemplates(List<ScheduleTemplate> scheduleTemplates) {
+    public void setScheduleTemplates(Map<String, ScheduleTemplate> scheduleTemplates) {
         if (scheduleTemplates ==  null) {
             throw new IllegalArgumentException("scheduleTemplates cannot be null");
         }
@@ -85,6 +83,10 @@ public class SchedulerConfig {
     }
 
     public void addScheduleTemplate(ScheduleTemplate scheduleTemplate) {
-        this.scheduleTemplates.add(scheduleTemplate);
+        this.scheduleTemplates.put(scheduleTemplate.getJobName(), scheduleTemplate);
+    }
+
+    public ScheduleTemplate getScheduleTemplate(String jobName) {
+        return scheduleTemplates.get(jobName);
     }
 }
