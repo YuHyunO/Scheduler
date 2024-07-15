@@ -39,6 +39,7 @@ public class Step4_StartCalendarIntervalScheduler {
         template2.setTriggerType(TriggerType.CALENDAR_INTERVAL_TRIGGER);
         template2.setJobClass(Step1_DefineJobClass.class);
         template2.setStartTime("NOW");
+        template2.setEndTime("2024-07-15 14:59:20");
         template2.setRepeatInterval(3);
         template2.setIntervalUnit(DateBuilder.IntervalUnit.SECOND);
         template2.setJobName("MyServiceLogic_2");
@@ -46,9 +47,21 @@ public class Step4_StartCalendarIntervalScheduler {
         template2.addJobParam("template name", "template2");
         template2.addJobParam("favorite fruit", "grape");
 
+        ScheduleTemplate template3 = new ScheduleTemplate();
+        template3.setTriggerType(TriggerType.CALENDAR_INTERVAL_TRIGGER);
+        template3.setJobClass(Step1_DefineJobClass.class);
+        template3.setStartTime("NOW");
+        template3.setJobName("MyServiceLogic_3");
+        template3.setPriority(8);
+        template3.setRepeatInterval(3);
+        template3.setIntervalUnit(DateBuilder.IntervalUnit.DAY);
+        template3.addJobParam("template name", "template3");
+        template3.addJobParam("hobby", "playing piano");
+
         //(4) Add ScheduleTemplates to SchedulerConfig
         config.addScheduleTemplate(template1);
         config.addScheduleTemplate(template2);
+        config.addScheduleTemplate(template3);
 
         //(5) Start scheduler
         String schdeulerID = manager.registerScheduler(config); //Register the SchedulerConfig we made to the SchedulerManager.

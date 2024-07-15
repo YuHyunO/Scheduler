@@ -18,10 +18,11 @@ public class Step1_DefineJobClass implements Job {
         StringBuilder logBd = new StringBuilder();
         logBd.append("\n---------------------\n");
         logBd.append(">Trigger Class: " + trigger.getClass() + "\n");
+        logBd.append(">Job Class: " + jobDetail.getJobClass().getName() + "\n");
         logBd.append(">Job Name: " + jobDetail.getKey().getName() + "\n");
         logBd.append(">Scheduled Fire Time: " + jobExecutionContext.getScheduledFireTime() + "\n");
         logBd.append(">Fire Time: " + jobExecutionContext.getFireTime() + "\n");
-        logBd.append(">Job Class: " + jobDetail.getJobClass().getName() + "\n");
+        logBd.append(">Next Fire Time: " + jobExecutionContext.getNextFireTime() + "\n");
 
         String[] paramKeys = jobDataMap.getKeys();
         for (int i = 0; i < paramKeys.length; i++) {

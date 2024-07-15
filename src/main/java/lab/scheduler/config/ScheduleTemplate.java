@@ -59,11 +59,16 @@ public class ScheduleTemplate {
                 TriggerBuilder trgBuilder = TriggerBuilder.newTrigger()
                         .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
-                        .startAt(startTime)
                         .forJob(jobName, jobGroupName);
-                if (endTime != null) {
-                    trgBuilder.endAt(endTime);
+                if (startTime == null) {
+                    startTime = new Date();
                 }
+                if (endTime == null) {
+                    endTime = toFormattedDate("9999-12-31 23:59:59");
+                }
+                trgBuilder.startAt(startTime);
+                trgBuilder.endAt(endTime);
+
                 SimpleScheduleBuilder simSchd = SimpleScheduleBuilder.simpleSchedule();
                 if (repeatCount <= -1) {
                     simSchd.repeatForever();
@@ -82,28 +87,42 @@ public class ScheduleTemplate {
                 return trgBuilder.withSchedule(simSchd).build();
             }
             case CALENDAR_INTERVAL_TRIGGER -> {
-                return TriggerBuilder.newTrigger()
+                TriggerBuilder trgBuilder = TriggerBuilder.newTrigger()
                         .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
                         .withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule()
                                 .withInterval(repeatInterval, intervalUnit))
-                        .startAt(startTime)
-                        .endAt(endTime)
-                        .forJob(jobName, jobGroupName)
-                        .build();
+                        .forJob(jobName, jobGroupName) ;
+
+                if (startTime == null) {
+                    startTime = new Date();
+                }
+                if (endTime == null) {
+                    endTime = toFormattedDate("9999-12-31 23:59:59");
+                }
+                trgBuilder.startAt(startTime);
+                trgBuilder.endAt(endTime);
+
+                return trgBuilder.build();
             }
             case DAILY_TIME_INTERVAL_TRIGGER -> {
-                return TriggerBuilder.newTrigger()
+                TriggerBuilder trgBuilder = TriggerBuilder.newTrigger()
                         .withIdentity("trg-" + jobName, triggerGroupName)
                         .withPriority(priority)
                         .withSchedule(DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule()
                                 .withInterval(repeatInterval, intervalUnit)
                                 .startingDailyAt(startTimeOfDay)
                                 .endingDailyAt(endTimeOfDay))
-                        .startAt(startTime)
-                        .endAt(endTime)
-                        .forJob(jobName, jobGroupName)
-                        .build();
+                        .forJob(jobName, jobGroupName);
+
+                if (startTime == null) {
+                    startTime = new Date();
+                }
+                if (endTime == null) {
+                    endTime = toFormattedDate("9999-12-31 23:59:59");
+                }
+                trgBuilder.startAt(startTime);
+                trgBuilder.endAt(endTime);
             }
             default -> throw new IllegalArgumentException("Unsupported trigger type: " + triggerType);
         }
