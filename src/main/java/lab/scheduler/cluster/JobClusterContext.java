@@ -1,5 +1,6 @@
 package lab.scheduler.cluster;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,9 +24,14 @@ public class JobClusterContext {
     private class HistoryHolder {
         String jobID;
         boolean inProcess;
+        Map<Long, Boolean> jobHistory;
 
-        HistoryHolder(String jobID) {
+        HistoryHolder(String jobID, long scheduledFireTime, boolean inProcess) {
             this.jobID = jobID;
+            if (jobHistory == null) {
+                jobHistory = new HashMap<>();
+            }
+            jobHistory.put(scheduledFireTime, inProcess);
         }
 
         void setInProcess(boolean inProcess) {

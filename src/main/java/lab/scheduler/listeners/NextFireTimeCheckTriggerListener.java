@@ -1,4 +1,4 @@
-package lab.scheduler.listener;
+package lab.scheduler.listeners;
 
 import lab.scheduler.core.SchedulerManager;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +29,8 @@ public class NextFireTimeCheckTriggerListener implements TriggerListener {
     @Override
     public void triggerComplete(Trigger trigger, JobExecutionContext jobExecutionContext, Trigger.CompletedExecutionInstruction completedExecutionInstruction) {
         Date nextFireTime = trigger.getNextFireTime();
+        Date fireTime = jobExecutionContext.getScheduledFireTime();
+        log.info(">>> {} , {}", fireTime, fireTime.getTime());
         if (nextFireTime == null) {
             try {
                 JobDetail jobDetail = jobExecutionContext.getJobDetail();
