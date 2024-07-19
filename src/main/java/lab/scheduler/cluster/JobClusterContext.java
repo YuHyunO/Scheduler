@@ -26,16 +26,17 @@ public class JobClusterContext {
         boolean inProcess;
         Map<Long, Boolean> jobHistory;
 
-        HistoryHolder(String jobID, long scheduledFireTime, boolean inProcess) {
+        HistoryHolder(String jobID) {
             this.jobID = jobID;
-            if (jobHistory == null) {
-                jobHistory = new HashMap<>();
-            }
-            jobHistory.put(scheduledFireTime, inProcess);
+            jobHistory = new HashMap<>();
         }
 
         void setInProcess(boolean inProcess) {
             this.inProcess = inProcess;
+        }
+
+        void addJobHistory(long scheduleFiredTime, boolean inProcess) {
+
         }
 
         public boolean isInProcess() {
