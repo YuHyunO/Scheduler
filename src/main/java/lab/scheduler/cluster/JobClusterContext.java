@@ -1,5 +1,6 @@
 package lab.scheduler.cluster;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,8 +36,8 @@ public class JobClusterContext {
             this.inProcess = inProcess;
         }
 
-        void addJobHistory(long scheduleFiredTime, boolean inProcess) {
-
+        void addJobHistory(Date scheduleFiredTime, boolean inProcess) {
+            long time = scheduleFiredTime.getTime()/1000;
         }
 
         public boolean isInProcess() {
