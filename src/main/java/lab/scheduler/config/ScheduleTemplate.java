@@ -1,8 +1,7 @@
 package lab.scheduler.config;
 
 import lab.scheduler.core.SchedulerManager;
-import lab.scheduler.enums.JobClusterOption;
-import lab.scheduler.enums.TriggerType;
+import lab.scheduler.cluster.JobClusterOption;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;

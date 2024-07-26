@@ -1,4 +1,4 @@
-package lab.scheduler.enums;
+package lab.scheduler.cluster;
 
 public enum JobClusterType {
     DB_JOBSTORE,

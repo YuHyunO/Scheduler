@@ -1,4 +1,4 @@
-package lab.scheduler.enums;
+package lab.scheduler.cluster;
 
 public enum JobClusterStrategy {
     FREE_HEAP_MEMORY,

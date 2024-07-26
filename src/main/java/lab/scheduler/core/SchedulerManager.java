@@ -1,7 +1,10 @@
 package lab.scheduler.core;
 
+import lab.scheduler.cluster.JobClusterContext;
+import lab.scheduler.config.JobClusterConfig;
 import lab.scheduler.config.ScheduleTemplate;
 import lab.scheduler.config.SchedulerConfig;
+import lab.scheduler.cluster.JobClusterType;
 import lab.scheduler.listeners.NextFireTimeCheckTriggerListener;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -65,7 +68,7 @@ public class SchedulerManager {
         }
     }
 
-    public String registerScheduler(String schedulerId, SchedulerConfig config) throws SchedulerException {
+    public String registerScheduler(String schedulerId, SchedulerConfig config) throws SchedulerException, IllegalStateException {
         if (schedulerId == null || schedulerId.isEmpty()) {
             schedulerId = Key.createUniqueName("SCHEDULER");
         }
@@ -75,6 +78,16 @@ public class SchedulerManager {
         if (config == null) {
             throw new IllegalArgumentException("SchedulerConfig is null");
         }
+
+        if (config.isClustered()) {
+            JobClusterConfig clusterConfig = config.getClusterConfig();
+            if (clusterConfig == null) {
+                throw new IllegalStateException("Job cluster option is true but cluster config is null");
+            }
+            JobClusterType clusterType = clusterConfig.getClusterType();
+            JobClusterContext.initialize(clusterType);
+        }
+
         Properties props = config.getProperties();
         props.put("org.quartz.scheduler.instanceId", schedulerId);
         SchedulerFactory factory = new StdSchedulerFactory(props);

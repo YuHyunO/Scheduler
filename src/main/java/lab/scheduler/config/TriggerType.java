@@ -1,4 +1,4 @@
-package lab.scheduler.enums;
+package lab.scheduler.config;
 
 public enum TriggerType {
     CRON_TRIGGER,

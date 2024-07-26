@@ -12,7 +12,7 @@ import java.util.*;
 @Data
 public class SchedulerConfig {
     private boolean isClustered;
-    private JobClusteringConfig clusteringConfig;
+    private JobClusterConfig clusterConfig;
     private boolean autoAdjustThreadCount = true;
     private int threadCount = 1;
     private int maxThreadCount = 100;

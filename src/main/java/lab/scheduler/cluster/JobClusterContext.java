@@ -9,17 +9,33 @@ public class JobClusterContext {
 
     private static JobClusterContext context;
     private Map<String, HistoryHolder> jobHistoryHolders;
+    private static Map<JobClusterType, Boolean> clusterInitializedInfo;
 
     private JobClusterContext() {}
 
+    public static boolean isInitialized(JobClusterType type) {
+        if (clusterInitializedInfo == null)
+            clusterInitializedInfo = new HashMap<>();
+        Boolean initialized = clusterInitializedInfo.get(type);
+
+        return initialized == null ? false : initialized;
+    }
+
+    public static void initialize(JobClusterType type) {
+        if (isInitialized(type))
+            return;
+
+    }
 
     public static JobClusterContext getInstance() {
         if (context == null) {
             context = new JobClusterContext();
             context.jobHistoryHolders = new ConcurrentHashMap<>();
         }
+
         return context;
     }
+
 
 
     private class HistoryHolder {

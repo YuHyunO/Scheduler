@@ -3,7 +3,7 @@ package lab.scheduler.tutorial;
 import lab.scheduler.config.ScheduleTemplate;
 import lab.scheduler.config.SchedulerConfig;
 import lab.scheduler.core.SchedulerManager;
-import lab.scheduler.enums.TriggerType;
+import lab.scheduler.config.TriggerType;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DateBuilder;
 

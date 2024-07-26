@@ -1,7 +1,7 @@
 package lab.scheduler.config;
 
-import lab.scheduler.enums.JobClusterStrategy;
-import lab.scheduler.enums.JobClusterType;
+import lab.scheduler.cluster.JobClusterStrategy;
+import lab.scheduler.cluster.JobClusterType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,13 +18,13 @@ import java.util.Properties;
 
 @Slf4j
 @Getter
-public class JobClusteringConfig {
+public class JobClusterConfig {
 
     private JobClusterType clusterType = JobClusterType.TCP_COMMUNICATION;
     private JobClusterStrategy clusterStrategy = JobClusterStrategy.FREE_HEAP_MEMORY;
     private int haConnectTimeoutMs = 2000;
     private int haReadTimeoutMs = 2000;
-    private int haServerOpenPort = 7070;
+    private int clusterServerPort = 7070;
     private List<InetAddress> haServerAddresses;
     private Properties quartzClusteringProperties;
     private Path jobStorePath;
@@ -51,7 +51,6 @@ public class JobClusteringConfig {
             case "FIRST_STARTED" : this.clusterStrategy = JobClusterStrategy.FIRST_STARTED; break;
             case "FAILOVER" : this.clusterStrategy = JobClusterStrategy.FAILOVER; break;
             case "ROUND_ROBIN" : this.clusterStrategy = JobClusterStrategy.ROUND_ROBIN; break;
-            case "RANDOM" : this.clusterStrategy = JobClusterStrategy.RANDOM; break;
             default: throw new IllegalArgumentException("Unknown cluster strategy: " + clusterStrategy);
         }
     }
@@ -77,9 +76,9 @@ public class JobClusteringConfig {
         }
     }
 
-    public void setHaServerOpenPort(int haServerOpenPort) throws IOException {
-        new ServerSocket(haServerOpenPort).close();
-        this.haServerOpenPort = haServerOpenPort;
+    public void setClusterServerPort(int clusterServerPort) throws IOException {
+        new ServerSocket(clusterServerPort).close();
+        this.clusterServerPort = clusterServerPort;
     }
 
     public void setHaServerAddresses(List<InetAddress> haServerAddresses) {
